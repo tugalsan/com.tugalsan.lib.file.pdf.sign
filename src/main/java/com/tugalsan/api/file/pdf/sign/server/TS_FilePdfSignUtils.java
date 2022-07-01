@@ -18,31 +18,28 @@ import org.apache.pdfbox.pdmodel.interactive.digitalsignature.PDSignature;
 import org.apache.pdfbox.pdmodel.interactive.digitalsignature.SignatureOptions;
 import com.tugalsan.api.file.server.*;
 import com.tugalsan.api.log.server.*;
+import com.tugalsan.api.unsafe.client.*;
 
 public class TS_FilePdfSignUtils extends CreateSignatureBase {
 
     final private static TS_Log d = TS_Log.of(TS_FilePdfSignUtils.class.getSimpleName());
 
     private static KeyStore toKeyStore(TS_FilePdfSignSslCfg cfg) {
-        try {
+        return TGS_UnSafe.compile(() -> {
             var keystore = KeyStore.getInstance(cfg.getType());
             try ( var is = Files.newInputStream(cfg.getKeyStorePath())) {
                 keystore.load(is, cfg.getKeyStorePass().toCharArray());
             }
             return keystore;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        });
     }
 
     private static TS_FilePdfSignUtils toSigner(TS_FilePdfSignSslCfg cfg) {
-        try {
+        return TGS_UnSafe.compile(() -> {
             var signer = new TS_FilePdfSignUtils(toKeyStore(cfg), cfg.getKeyStorePass().toCharArray());
             signer.setExternalSigning(cfg.getTsaURL() == null);
             return signer;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        });
     }
 
     public static Path getSignedPdfPath(Path rawPdf) {
@@ -69,7 +66,7 @@ public class TS_FilePdfSignUtils extends CreateSignatureBase {
             return null;
         }
         var output = getSignedPdfPath(rawPdf);
-        try {
+        return TGS_UnSafe.compile(() -> {
             var result = toSigner(cfg).signIfNotSignedBefore(rawPdf, output, cfg.getTsaURL(), signName, signLoc, signReason);
             if (!result) {//CLEANNING GARBAGE FILE
                 d.ce("signIfNotSignedBefore", "result is false");
@@ -82,10 +79,10 @@ public class TS_FilePdfSignUtils extends CreateSignatureBase {
                 return null;
             }
             return output;
-        } catch (Exception e) {
+        }, e -> {
             TS_FileUtils.deleteFileIfExists(output);
-            throw new RuntimeException(e);
-        }
+            return TGS_UnSafe.catchMeIfUCanReturns(e);
+        });
     }
 
     public TS_FilePdfSignUtils(KeyStore keystore, char[] pin) throws KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException, CertificateException, IOException {
@@ -93,7 +90,7 @@ public class TS_FilePdfSignUtils extends CreateSignatureBase {
     }
 
     private boolean signIfNotSignedBefore(Path rawPdf, Path output, CharSequence tsaUrl, CharSequence signName, CharSequence signLoc, CharSequence signReason) {
-        try {
+        return TGS_UnSafe.compile(() -> {
             if (rawPdf == null || !TS_FileUtils.isExistFile(rawPdf)) {
                 d.ce("signIfNotSignedBefore", "ERROR: source document not exixts", rawPdf);
                 return false;
@@ -112,16 +109,14 @@ public class TS_FilePdfSignUtils extends CreateSignatureBase {
                 signDetached(doc, fos, signName.toString(), signLoc.toString(), signReason.toString());
                 return true;
             }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        });
     }
 
     private void signDetached(PDDocument document, OutputStream output, CharSequence signName, CharSequence signLoc, CharSequence signReason) {
-        try {
+        TGS_UnSafe.execute(() -> {
             var accessPermissions = SigUtils.getMDPPermission(document);
             if (accessPermissions == 1) {
-                throw new IllegalStateException("No changes to the document are permitted due to DocMDP transform parameters dictionary");
+                TGS_UnSafe.catchMeIfUCan(d.className, "signDetached", "No changes to the document are permitted due to DocMDP transform parameters dictionary");
             }
             var signature = new PDSignature();
             signature.setFilter(PDSignature.FILTER_ADOBE_PPKLITE);
@@ -144,8 +139,6 @@ public class TS_FilePdfSignUtils extends CreateSignatureBase {
                 document.addSignature(signature, this, signatureOptions);
                 document.saveIncremental(output);
             }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        });
     }
 }
