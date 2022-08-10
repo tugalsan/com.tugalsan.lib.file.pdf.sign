@@ -22,7 +22,7 @@ import com.tugalsan.api.unsafe.client.*;
 
 public class TS_FilePdfSignUtils extends CreateSignatureBase {
 
-    final private static TS_Log d = TS_Log.of(TS_FilePdfSignUtils.class.getSimpleName());
+    final private static TS_Log d = TS_Log.of(true, TS_FilePdfSignUtils.class.getSimpleName());
 
     private static KeyStore toKeyStore(TS_FilePdfSignSslCfg cfg) {
         return TGS_UnSafe.compile(() -> {
@@ -48,7 +48,13 @@ public class TS_FilePdfSignUtils extends CreateSignatureBase {
     }
 
     public static Path signIfNotSignedBefore(Path keyStore, String keyPass, Path rawPdf, CharSequence signName, CharSequence signLoc, CharSequence signReason) {
-        return signIfNotSignedBefore(new TS_FilePdfSignSslCfg(keyStore, keyPass), rawPdf, signName, signLoc, signReason);
+        d.ci("signIfNotSignedBefore", "redirect");
+        System.err.print("**********************");
+        System.out.print("----------------------");
+        return signIfNotSignedBefore(
+                new TS_FilePdfSignSslCfg(keyStore, keyPass),
+                rawPdf, signName, signLoc, signReason
+        );
     }
 
     public static boolean preCleanup(Path rawPdf) {
@@ -62,25 +68,32 @@ public class TS_FilePdfSignUtils extends CreateSignatureBase {
     }
 
     public static Path signIfNotSignedBefore(TS_FilePdfSignSslCfg cfg, Path rawPdf, CharSequence signName, CharSequence signLoc, CharSequence signReason) {
+        d.ci("signIfNotSignedBefore", "init", cfg);
         if (preCleanup(rawPdf)) {
             return null;
         }
+        d.ci("signIfNotSignedBefore", "after-preCleanup");
         var output = getSignedPdfPath(rawPdf);
+        d.ci("signIfNotSignedBefore", "output", output);
         return TGS_UnSafe.compile(() -> {
             var result = toSigner(cfg).signIfNotSignedBefore(rawPdf, output, cfg.getTsaURL(), signName, signLoc, signReason);
-            if (!result) {//CLEANNING GARBAGE FILE
-                d.ce("signIfNotSignedBefore", "result is false");
+            d.ci("signIfNotSignedBefore", "result", result);
+            if (!result) {
+                d.ce("signIfNotSignedBefore", "result is false", "CLEANNING GARBAGE FILE");
                 TS_FileUtils.deleteFileIfExists(output);
                 return null;
             }
-            if (TS_FileUtils.isExistFile(output) && TS_FileUtils.isEmptyFile(output)) {//CLEANNING GARBAGE FILE
+            if (TS_FileUtils.isExistFile(output) && TS_FileUtils.isEmptyFile(output)) {
+                d.ce("signIfNotSignedBefore", "result is false", "CLEANNING GARBAGE IS EMPTY FILE");
                 d.ce("signIfNotSignedBefore", "result is empty");
                 TS_FileUtils.deleteFileIfExists(output);
                 return null;
             }
+            d.ci("signIfNotSignedBefore", "returning");
             return output;
         }, e -> {
             TS_FileUtils.deleteFileIfExists(output);
+            d.ce("signIfNotSignedBefore", e.getMessage());
             return TGS_UnSafe.catchMeIfUCanReturns(e);
         });
     }

@@ -38,4 +38,9 @@ public class TS_FilePdfSignSslCfg {
     public String getType() {
         return keyType;
     }
+
+    @Override
+    public String toString() {
+        return TS_FilePdfSignSslCfg.class.getSimpleName() + "{" + "keyStorePath=" + keyStorePath + ", keyStorePass=" + keyStorePass + ", tsaURL=" + tsaURL + ", keyType=" + keyType + '}';
+    }
 }
