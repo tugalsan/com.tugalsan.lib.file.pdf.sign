@@ -48,9 +48,6 @@ public class TS_FilePdfSignUtils extends CreateSignatureBase {
     }
 
     public static Path signIfNotSignedBefore(Path keyStore, String keyPass, Path rawPdf, CharSequence signName, CharSequence signLoc, CharSequence signReason) {
-        d.ci("signIfNotSignedBefore", "redirect");
-        System.err.print("**********************");
-        System.out.print("----------------------");
         return signIfNotSignedBefore(
                 new TS_FilePdfSignSslCfg(keyStore, keyPass),
                 rawPdf, signName, signLoc, signReason
@@ -58,18 +55,23 @@ public class TS_FilePdfSignUtils extends CreateSignatureBase {
     }
 
     public static boolean preCleanup(Path rawPdf) {
+        d.ci("preCleanup", "rawPdf", rawPdf);
         var output = getSignedPdfPath(rawPdf);
+        d.ci("preCleanup", "output", output);
         TS_FileUtils.deleteFileIfExists(output);
+        d.ci("preCleanup", "supposed to be cleaned");
         if (TS_FileUtils.isExistFile(output)) {
             d.ce("preCleanup", "cannot clean", output);
             return false;
         }
+        d.ci("preCleanup", "cleanning successfull");
         return true;
     }
 
     public static Path signIfNotSignedBefore(TS_FilePdfSignSslCfg cfg, Path rawPdf, CharSequence signName, CharSequence signLoc, CharSequence signReason) {
         d.ci("signIfNotSignedBefore", "init", cfg);
-        if (preCleanup(rawPdf)) {
+        if (!preCleanup(rawPdf)) {
+            d.ci("signIfNotSignedBefore", "cleanup error", "cannot continue");
             return null;
         }
         d.ci("signIfNotSignedBefore", "after-preCleanup");

@@ -14,15 +14,15 @@
         <dependency>
             <groupId>org.apache.pdfbox</groupId>
             <artifactId>pdfbox-examples</artifactId>
-            <exclusions>
+            <!--<exclusions>
                 <exclusion>
                     <groupId>org.apache.lucene</groupId>
                     <artifactId>lucene-analyzers-common</artifactId>
                 </exclusion>
-            </exclusions>
+            </exclusions>-->
             <version>3.0.0-RC1</version>
         </dependency>
-        <!-- <dependency>
+        <dependency>
             <groupId>org.apache.pdfbox</groupId>
             <artifactId>xmpbox</artifactId>
             <version>3.0.0-RC1</version>
@@ -36,7 +36,7 @@
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcpkix-jdk15on</artifactId>
             <version>1.70</version>
-        </dependency> -->
+        </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>com.tugalsan.api.file</artifactId>
