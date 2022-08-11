@@ -26,7 +26,7 @@
             </exclusions>
             <version>3.0.0-RC1</version>
         </dependency>
-        <dependency><!-- WARNING: U should include in your applicationjava.lang.NoClassDefFoundError: org/bouncycastle/cms/CMSException -->
+        <dependency><!-- WARNING: Without it: it will compile, but on runtime -> applicationjava.lang.NoClassDefFoundError: org/bouncycastle/cms/CMSException -->
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcpkix-jdk15on</artifactId>
             <version>1.70</version>
