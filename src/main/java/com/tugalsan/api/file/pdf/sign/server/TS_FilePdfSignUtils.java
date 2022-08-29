@@ -75,26 +75,25 @@ public class TS_FilePdfSignUtils extends CreateSignatureBase {
             return null;
         }
         d.ci("signIfNotSignedBefore", "after-preCleanup");
-        var output = getSignedPdfPath(rawPdf);
-        d.ci("signIfNotSignedBefore", "output", output);
+        var outputPdf = getSignedPdfPath(rawPdf);
+        d.ci("signIfNotSignedBefore", "outputPdf", outputPdf);
         return TGS_UnSafe.compile(() -> {
-            var result = toSigner(cfg).signIfNotSignedBefore(rawPdf, output, cfg.getTsaURL(), signName, signLoc, signReason);
+            var result = toSigner(cfg).signIfNotSignedBefore(rawPdf, outputPdf, cfg.getTsaURL(), signName, signLoc, signReason);
             d.ci("signIfNotSignedBefore", "result", result);
             if (!result) {
                 d.ce("signIfNotSignedBefore", "result is false", "CLEANNING GARBAGE FILE");
-                TS_FileUtils.deleteFileIfExists(output);
+                TS_FileUtils.deleteFileIfExists(outputPdf);
                 return null;
             }
-            if (TS_FileUtils.isExistFile(output) && TS_FileUtils.isEmptyFile(output)) {
-                d.ce("signIfNotSignedBefore", "result is false", "CLEANNING GARBAGE IS EMPTY FILE");
-                d.ce("signIfNotSignedBefore", "result is empty");
-                TS_FileUtils.deleteFileIfExists(output);
+            if (TS_FileUtils.isExistFile(outputPdf) && TS_FileUtils.isEmptyFile(outputPdf)) {
+                d.ce("signIfNotSignedBefore", "result is false", "CLEANNING GARBAGE FILE");
+                TS_FileUtils.deleteFileIfExists(outputPdf);
                 return null;
             }
             d.ci("signIfNotSignedBefore", "returning");
-            return output;
+            return outputPdf;
         }, e -> {
-            TS_FileUtils.deleteFileIfExists(output);
+            TS_FileUtils.deleteFileIfExists(outputPdf);
             d.ce("signIfNotSignedBefore", e.getMessage());
             return TGS_UnSafe.catchMeIfUCanReturns(e);
         });
