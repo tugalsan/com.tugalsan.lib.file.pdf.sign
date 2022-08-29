@@ -22,7 +22,7 @@ import com.tugalsan.api.unsafe.client.*;
 
 public class TS_FilePdfSignUtils extends CreateSignatureBase {
 
-    final private static TS_Log d = TS_Log.of(true, TS_FilePdfSignUtils.class.getSimpleName());
+    final private static TS_Log d = TS_Log.of(true, TS_FilePdfSignUtils.class);
 
     private static KeyStore toKeyStore(TS_FilePdfSignSslCfg cfg) {
         return TGS_UnSafe.compile(() -> {
