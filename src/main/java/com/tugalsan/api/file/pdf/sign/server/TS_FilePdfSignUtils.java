@@ -98,7 +98,7 @@ public class TS_FilePdfSignUtils extends CreateSignatureBase {
         var outputPdf = getSignedPdfPath(rawPdf);
         d.ci("signIfNotSignedBefore", "outputPdf", outputPdf);
         return TGS_UnSafe.compile(() -> {
-            var result = toSigner(cfg).signIfNotSignedBefore(rawPdf, outputPdf, cfg.getTsa().toString(), signName, signLoc, signReason);
+            var result = toSigner(cfg).signIfNotSignedBefore(rawPdf, outputPdf, cfg.getTsa() == null ? null : cfg.getTsa().toString(), signName, signLoc, signReason);
             d.ci("signIfNotSignedBefore", "result", result);
             if (!result) {
                 d.ce("signIfNotSignedBefore", "result is false", "CLEANNING GARBAGE FILE");
