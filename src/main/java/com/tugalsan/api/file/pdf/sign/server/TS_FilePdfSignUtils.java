@@ -18,11 +18,31 @@ import org.apache.pdfbox.pdmodel.interactive.digitalsignature.PDSignature;
 import org.apache.pdfbox.pdmodel.interactive.digitalsignature.SignatureOptions;
 import com.tugalsan.api.file.server.*;
 import com.tugalsan.api.log.server.*;
+import com.tugalsan.api.stream.client.TGS_StreamUtils;
 import com.tugalsan.api.unsafe.client.*;
+import com.tugalsan.api.url.client.TGS_Url;
+import java.util.List;
 
 public class TS_FilePdfSignUtils extends CreateSignatureBase {
 
     final private static TS_Log d = TS_Log.of(true, TS_FilePdfSignUtils.class);
+
+    public List<TGS_Url> lstTsa() {
+        return TGS_StreamUtils.toList(
+                List.of(
+                        "https://kbpdfstudio.qoppa.com/list-of-timestamp-servers-for-signing-pdf/",
+                        "https://freetsa.org/tsr",
+                        "http://time.certum.pl",
+                        "http://timestamp.digicert.com",
+                        "http://timestamp.apple.com/ts01",
+                        "http://timestamp.entrust.net/TSS/RFC3161sha2TS",
+                        "http://tsa.cesnet.cz:3161/tsa",
+                        "https://tsa.cesnet.cz:3162/tsa",
+                        "http://tsa.cesnet.cz:5816/tsa",
+                        "https://tsa.cesnet.cz:5817/tsa"
+                ).stream().map(s -> TGS_Url.of(s))
+        );
+    }
 
     private static KeyStore toKeyStore(TS_FilePdfSignSslCfg cfg) {
         return TGS_UnSafe.compile(() -> {

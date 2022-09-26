@@ -8,23 +8,6 @@ import java.util.Locale;
 
 public class TS_FilePdfSignSslCfg {
 
-    public List<TGS_Url> lstTsa() {
-        return TGS_StreamUtils.toList(
-                List.of(
-                        "https://kbpdfstudio.qoppa.com/list-of-timestamp-servers-for-signing-pdf/",
-                        "https://freetsa.org/tsr",
-                        "http://time.certum.pl",
-                        "http://timestamp.digicert.com",
-                        "http://timestamp.apple.com/ts01",
-                        "http://timestamp.entrust.net/TSS/RFC3161sha2TS",
-                        "http://tsa.cesnet.cz:3161/tsa",
-                        "https://tsa.cesnet.cz:3162/tsa",
-                        "http://tsa.cesnet.cz:5816/tsa",
-                        "https://tsa.cesnet.cz:5817/tsa"
-                ).stream().map(s -> TGS_Url.of(s))
-        );
-    }
-
     public TS_FilePdfSignSslCfg(Path keyStorePath, CharSequence keyStorePass) {
         this(keyStorePath, keyStorePass, null);//"https://freetsa.org/tsr";
     }
