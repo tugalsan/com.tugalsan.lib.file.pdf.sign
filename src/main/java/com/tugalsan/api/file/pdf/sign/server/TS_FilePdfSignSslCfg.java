@@ -1,9 +1,7 @@
 package com.tugalsan.api.file.pdf.sign.server;
 
-import com.tugalsan.api.stream.client.TGS_StreamUtils;
 import com.tugalsan.api.url.client.TGS_Url;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Locale;
 
 public class TS_FilePdfSignSslCfg {
@@ -37,6 +35,10 @@ public class TS_FilePdfSignSslCfg {
 
     public TGS_Url getTsa() {
         return tsa;
+    }
+    
+    public void setTsa(TGS_Url newTsa){
+        tsa = newTsa;
     }
 
     public String getType() {
