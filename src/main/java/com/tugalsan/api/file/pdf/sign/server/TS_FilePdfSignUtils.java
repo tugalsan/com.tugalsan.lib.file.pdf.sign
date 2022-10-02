@@ -28,7 +28,7 @@ public class TS_FilePdfSignUtils extends CreateSignatureBase {
     final private static TS_Log d = TS_Log.of(true, TS_FilePdfSignUtils.class);
 
     public static List<TGS_Url> lstTsa() {
-        return TGS_StreamUtils.toList(
+        return TGS_StreamUtils.toLst(
                 List.of(
                         "https://kbpdfstudio.qoppa.com/list-of-timestamp-servers-for-signing-pdf/",
                         "https://freetsa.org/tsr",
