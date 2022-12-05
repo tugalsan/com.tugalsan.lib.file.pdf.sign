@@ -115,7 +115,8 @@ public class TS_FilePdfSignUtils extends CreateSignatureBase {
         }, e -> {
             TS_FileUtils.deleteFileIfExists(outputPdf);
             d.ce("signIfNotSignedBefore", e.getMessage());
-            return TGS_UnSafe.catchMeIfUCanReturns(e);
+//            return TGS_UnSafe.catchMeIfUCanReturns(e);
+            return null;
         });
     }
 
