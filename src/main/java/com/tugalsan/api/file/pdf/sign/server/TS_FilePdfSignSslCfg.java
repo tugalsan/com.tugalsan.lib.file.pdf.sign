@@ -1,8 +1,8 @@
 package com.tugalsan.api.file.pdf.sign.server;
 
+import com.tugalsan.api.charset.client.TGS_CharSetCast;
 import com.tugalsan.api.url.client.TGS_Url;
 import java.nio.file.Path;
-import java.util.Locale;
 
 public class TS_FilePdfSignSslCfg {
 
@@ -14,7 +14,7 @@ public class TS_FilePdfSignSslCfg {
         this.keyStorePath = keyStorePath;
         this.keyStorePass = keyStorePass.toString();
         this.tsa = tsa;
-        var fn = keyStorePath.getFileName().toString().toLowerCase(Locale.ROOT);
+        var fn = TGS_CharSetCast.toLocaleLowerCase(keyStorePath.getFileName().toString());
         if (fn.endsWith(".p12")) {
             keyType = "PKCS12";
         } else if (fn.endsWith(".jks")) {
@@ -36,8 +36,8 @@ public class TS_FilePdfSignSslCfg {
     public TGS_Url getTsa() {
         return tsa;
     }
-    
-    public void setTsa(TGS_Url newTsa){
+
+    public void setTsa(TGS_Url newTsa) {
         tsa = newTsa;
     }
 
