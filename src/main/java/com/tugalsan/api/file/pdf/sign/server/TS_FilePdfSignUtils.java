@@ -45,7 +45,7 @@ public class TS_FilePdfSignUtils extends CreateSignatureBase {
     }
 
     private static KeyStore toKeyStore(TS_FilePdfSignSslCfg cfg) {
-        return TGS_UnSafe.compile(() -> {
+        return TGS_UnSafe.call(() -> {
             var keystore = KeyStore.getInstance(cfg.getType());
             try ( var is = Files.newInputStream(cfg.getKeyStorePath())) {
                 keystore.load(is, cfg.getKeyStorePass().toCharArray());
@@ -55,7 +55,7 @@ public class TS_FilePdfSignUtils extends CreateSignatureBase {
     }
 
     private static TS_FilePdfSignUtils toSigner(TS_FilePdfSignSslCfg cfg) {
-        return TGS_UnSafe.compile(() -> {
+        return TGS_UnSafe.call(() -> {
             var signer = new TS_FilePdfSignUtils(toKeyStore(cfg), cfg.getKeyStorePass().toCharArray());
             signer.setExternalSigning(cfg.getTsa() == null);
             return signer;
@@ -97,7 +97,7 @@ public class TS_FilePdfSignUtils extends CreateSignatureBase {
         d.ci("signIfNotSignedBefore", "after-preCleanup");
         var outputPdf = getSignedPdfPath(rawPdf);
         d.ci("signIfNotSignedBefore", "outputPdf", outputPdf);
-        return TGS_UnSafe.compile(() -> {
+        return TGS_UnSafe.call(() -> {
             var result = toSigner(cfg).signIfNotSignedBefore(rawPdf, outputPdf, cfg.getTsa() == null ? null : cfg.getTsa().toString(), signName, signLoc, signReason);
             d.ci("signIfNotSignedBefore", "result", result);
             if (!result) {
@@ -115,7 +115,7 @@ public class TS_FilePdfSignUtils extends CreateSignatureBase {
         }, e -> {
             TS_FileUtils.deleteFileIfExists(outputPdf);
             d.ce("signIfNotSignedBefore", e.getMessage());
-//            return TGS_UnSafe.catchMeIfUCanReturns(e);
+//            return TGS_UnSafe.thrwReturns(e);
             return null;
         });
     }
@@ -125,7 +125,7 @@ public class TS_FilePdfSignUtils extends CreateSignatureBase {
     }
 
     private boolean signIfNotSignedBefore(Path rawPdf, Path output, CharSequence tsaUrl, CharSequence signName, CharSequence signLoc, CharSequence signReason) {
-        return TGS_UnSafe.compile(() -> {
+        return TGS_UnSafe.call(() -> {
             if (rawPdf == null || !TS_FileUtils.isExistFile(rawPdf)) {
                 d.ce("signIfNotSignedBefore", "ERROR: source document not exixts", rawPdf);
                 return false;
@@ -148,10 +148,10 @@ public class TS_FilePdfSignUtils extends CreateSignatureBase {
     }
 
     private void signDetached(PDDocument document, OutputStream output, CharSequence signName, CharSequence signLoc, CharSequence signReason) {
-        TGS_UnSafe.execute(() -> {
+        TGS_UnSafe.run(() -> {
             var accessPermissions = SigUtils.getMDPPermission(document);
             if (accessPermissions == 1) {
-                TGS_UnSafe.catchMeIfUCan(d.className, "signDetached", "No changes to the document are permitted due to DocMDP transform parameters dictionary");
+                TGS_UnSafe.thrw(d.className, "signDetached", "No changes to the document are permitted due to DocMDP transform parameters dictionary");
             }
             var signature = new PDSignature();
             signature.setFilter(PDSignature.FILTER_ADOBE_PPKLITE);
