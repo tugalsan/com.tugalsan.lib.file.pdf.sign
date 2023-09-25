@@ -1,5 +1,5 @@
 module com.tugalsan.api.file.pdf.sign {
-    requires pdfbox;
+    requires org.apache.pdfbox;
     requires pdfbox.examples;
     requires com.tugalsan.api.file;
     requires com.tugalsan.api.url;
