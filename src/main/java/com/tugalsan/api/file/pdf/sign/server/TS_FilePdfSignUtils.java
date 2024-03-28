@@ -25,7 +25,7 @@ import java.util.List;
 
 public class TS_FilePdfSignUtils extends CreateSignatureBase {
 
-    final private static TS_Log d = TS_Log.of(true, TS_FilePdfSignUtils.class);
+    final private static TS_Log d = TS_Log.of( TS_FilePdfSignUtils.class);
 
     public static List<TGS_Url> lstTsa() {
         return TGS_StreamUtils.toLst(
