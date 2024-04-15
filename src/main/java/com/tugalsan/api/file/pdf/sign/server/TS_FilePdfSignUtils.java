@@ -19,13 +19,14 @@ import org.apache.pdfbox.pdmodel.interactive.digitalsignature.SignatureOptions;
 import com.tugalsan.api.file.server.*;
 import com.tugalsan.api.log.server.*;
 import com.tugalsan.api.stream.client.TGS_StreamUtils;
-import com.tugalsan.api.unsafe.client.*;
+import com.tugalsan.api.union.client.TGS_UnionExcuse;
+import com.tugalsan.api.union.client.TGS_UnionExcuseVoid;
 import com.tugalsan.api.url.client.TGS_Url;
 import java.util.List;
 
 public class TS_FilePdfSignUtils extends CreateSignatureBase {
 
-    final private static TS_Log d = TS_Log.of( TS_FilePdfSignUtils.class);
+    final private static TS_Log d = TS_Log.of(TS_FilePdfSignUtils.class);
 
     public static List<TGS_Url> lstTsa() {
         return TGS_StreamUtils.toLst(
@@ -44,22 +45,30 @@ public class TS_FilePdfSignUtils extends CreateSignatureBase {
         );
     }
 
-    private static KeyStore toKeyStore(TS_FilePdfSignSslCfg cfg) {
-        return TGS_UnSafe.call(() -> {
+    private static TGS_UnionExcuse<KeyStore> toKeyStore(TS_FilePdfSignSslCfg cfg) {
+        try {
             var keystore = KeyStore.getInstance(cfg.getType());
-            try ( var is = Files.newInputStream(cfg.getKeyStorePath())) {
+            try (var is = Files.newInputStream(cfg.getKeyStorePath())) {
                 keystore.load(is, cfg.getKeyStorePass().toCharArray());
             }
-            return keystore;
-        });
+            return TGS_UnionExcuse.of(keystore);
+        } catch (IOException | NoSuchAlgorithmException | CertificateException | KeyStoreException ex) {
+            return TGS_UnionExcuse.ofExcuse(ex);
+        }
     }
 
-    private static TS_FilePdfSignUtils toSigner(TS_FilePdfSignSslCfg cfg) {
-        return TGS_UnSafe.call(() -> {
-            var signer = new TS_FilePdfSignUtils(toKeyStore(cfg), cfg.getKeyStorePass().toCharArray());
+    private static TGS_UnionExcuse<TS_FilePdfSignUtils> toSigner(TS_FilePdfSignSslCfg cfg) {
+        try {
+            var u_keyStore = toKeyStore(cfg);
+            if (u_keyStore.isExcuse()) {
+                return u_keyStore.toExcuse();
+            }
+            var signer = new TS_FilePdfSignUtils(u_keyStore.value(), cfg.getKeyStorePass().toCharArray());
             signer.setExternalSigning(cfg.getTsa() == null);
-            return signer;
-        });
+            return TGS_UnionExcuse.of(signer);
+        } catch (KeyStoreException | UnrecoverableKeyException | NoSuchAlgorithmException | CertificateException | IOException ex) {
+            return TGS_UnionExcuse.ofExcuse(ex);
+        }
     }
 
     public static Path getSignedPdfPath(Path rawPdf) {
@@ -67,91 +76,100 @@ public class TS_FilePdfSignUtils extends CreateSignatureBase {
         return rawPdf.resolveSibling(label + "_signed.pdf");
     }
 
-    public static Path signIfNotSignedBefore(Path keyStore, String keyPass, Path rawPdf, CharSequence signName, CharSequence signLoc, CharSequence signReason) {
+    public static TGS_UnionExcuse<Path> signIfNotSignedBefore(Path keyStore, String keyPass, Path rawPdf, CharSequence signName, CharSequence signLoc, CharSequence signReason) {
         return signIfNotSignedBefore(
                 new TS_FilePdfSignSslCfg(keyStore, keyPass),
                 rawPdf, signName, signLoc, signReason
         );
     }
 
-    public static boolean preCleanup(Path rawPdf) {
+    public static TGS_UnionExcuseVoid preCleanup(Path rawPdf) {
         d.ci("preCleanup", "rawPdf", rawPdf);
         var output = getSignedPdfPath(rawPdf);
         d.ci("preCleanup", "output", output);
-        TS_FileUtils.deleteFileIfExists(output);
+        var u_deleteFileIfExists = TS_FileUtils.deleteFileIfExists(output);
+        if (u_deleteFileIfExists.isExcuse()) {
+            return u_deleteFileIfExists;
+        }
         d.ci("preCleanup", "supposed to be cleaned");
         if (TS_FileUtils.isExistFile(output)) {
-            d.ce("preCleanup", "cannot clean", output);
-            return false;
+            return TGS_UnionExcuseVoid.ofExcuse(d.className, "preCleanup", "cannot clean " + output);
         }
         d.ci("preCleanup", "cleanning successfull");
-        return true;
+        return TGS_UnionExcuseVoid.ofVoid();
     }
 
-    public static Path signIfNotSignedBefore(TS_FilePdfSignSslCfg cfg, Path rawPdf, CharSequence signName, CharSequence signLoc, CharSequence signReason) {
+    public static TGS_UnionExcuse<Path> signIfNotSignedBefore(TS_FilePdfSignSslCfg cfg, Path rawPdf, CharSequence signName, CharSequence signLoc, CharSequence signReason) {
         d.ci("signIfNotSignedBefore", "init", cfg);
-        if (!preCleanup(rawPdf)) {
-            d.ci("signIfNotSignedBefore", "cleanup error", "cannot continue");
-            return null;
+        var u_preCleanup = preCleanup(rawPdf);
+        if (u_preCleanup.isExcuse()) {
+            return u_preCleanup.toExcuse();
         }
         d.ci("signIfNotSignedBefore", "after-preCleanup");
         var outputPdf = getSignedPdfPath(rawPdf);
         d.ci("signIfNotSignedBefore", "outputPdf", outputPdf);
-        return TGS_UnSafe.call(() -> {
-            var result = toSigner(cfg).signIfNotSignedBefore(rawPdf, outputPdf, cfg.getTsa() == null ? null : cfg.getTsa().toString(), signName, signLoc, signReason);
-            d.ci("signIfNotSignedBefore", "result", result);
-            if (!result) {
-                d.ce("signIfNotSignedBefore", "result is false", "CLEANNING GARBAGE FILE");
-                TS_FileUtils.deleteFileIfExists(outputPdf);
-                return null;
-            }
-            if (TS_FileUtils.isExistFile(outputPdf) && TS_FileUtils.isEmptyFile(outputPdf)) {
-                d.ce("signIfNotSignedBefore", "result is false", "CLEANNING GARBAGE FILE");
-                TS_FileUtils.deleteFileIfExists(outputPdf);
-                return null;
-            }
-            d.ci("signIfNotSignedBefore", "returning");
-            return outputPdf;
-        }, e -> {
+        var u_signer = toSigner(cfg);
+        if (u_signer.isExcuse()) {
+            return u_signer.toExcuse();
+        }
+        var result = u_signer.value().signIfNotSignedBefore(rawPdf, outputPdf, cfg.getTsa() == null ? null : cfg.getTsa().toString(), signName, signLoc, signReason);
+        d.ci("signIfNotSignedBefore", "result", result);
+        if (result.isExcuse()) {
+            return result.toExcuse();
+        }
+        if (TS_FileUtils.isExistFile(outputPdf)) {
+            d.ce("signIfNotSignedBefore", "result is false", "CLEANNING GARBAGE FILE");
             TS_FileUtils.deleteFileIfExists(outputPdf);
-            d.ce("signIfNotSignedBefore", e.getMessage());
-//            return TGS_UnSafe.thrwReturns(e);
-            return null;
-        });
+            return TGS_UnionExcuse.ofExcuse(d.className, "signIfNotSignedBefore", "signed file is not exists");
+        }
+        var u_isEmpty = TS_FileUtils.isEmptyFile(outputPdf);
+        if (u_isEmpty.isExcuse()) {
+            TS_FileUtils.deleteFileIfExists(outputPdf);
+            return u_isEmpty.toExcuse();
+        }
+        if (u_isEmpty.value()) {
+            TS_FileUtils.deleteFileIfExists(outputPdf);
+            return TGS_UnionExcuse.ofExcuse(d.className, "signIfNotSignedBefore", "signed file is empty");
+        }
+        return TGS_UnionExcuse.of(outputPdf);
     }
 
     public TS_FilePdfSignUtils(KeyStore keystore, char[] pin) throws KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException, CertificateException, IOException {
         super(keystore, pin);
     }
 
-    private boolean signIfNotSignedBefore(Path rawPdf, Path output, CharSequence tsaUrl, CharSequence signName, CharSequence signLoc, CharSequence signReason) {
-        return TGS_UnSafe.call(() -> {
-            if (rawPdf == null || !TS_FileUtils.isExistFile(rawPdf)) {
-                d.ce("signIfNotSignedBefore", "ERROR: source document not exixts", rawPdf);
-                return false;
+    private TGS_UnionExcuseVoid signIfNotSignedBefore(Path rawPdf, Path output, CharSequence tsaUrl, CharSequence signName, CharSequence signLoc, CharSequence signReason) {
+        if (rawPdf == null || !TS_FileUtils.isExistFile(rawPdf)) {
+            return TGS_UnionExcuseVoid.ofExcuse(d.className, "signIfNotSignedBefore", "ERROR: source document not exixts: " + rawPdf);
+        }
+        var u_empty = TS_FileUtils.isEmptyFile(rawPdf);
+        if (u_empty.isExcuse()) {
+            return u_empty.toExcuseVoid();
+        }
+        if (u_empty.value()) {
+            return TGS_UnionExcuseVoid.ofExcuse(d.className, "signIfNotSignedBefore", "ERROR: source document is empty: " + rawPdf);
+        }
+        setTsaUrl(tsaUrl == null ? null : tsaUrl.toString());
+        try (var fos = Files.newOutputStream(output); var doc = Loader.loadPDF(rawPdf.toFile())) {
+            if (!doc.getSignatureDictionaries().isEmpty()) {
+                return TGS_UnionExcuseVoid.ofExcuse(d.className, "signIfNotSignedBefore", "SKIP: document is already signed before");
+                //WILL CREATE GARBAGE, HANDLE IT
             }
-            if (TS_FileUtils.isEmptyFile(rawPdf)) {
-                d.ce("signIfNotSignedBefore", "ERROR: source document is empty", rawPdf);
-                return false;
+            var u_detach = signDetached(doc, fos, signName.toString(), signLoc.toString(), signReason.toString());
+            if (u_detach.isExcuse()) {
+                return u_detach;
             }
-            setTsaUrl(tsaUrl == null ? null : tsaUrl.toString());
-            try ( var fos = Files.newOutputStream(output);  var doc = Loader.loadPDF(rawPdf.toFile())) {
-                if (!doc.getSignatureDictionaries().isEmpty()) {
-                    d.ce("signIfNotSignedBefore", "SKIP: document is already signed before");
-                    //WILL CREATE GARBAGE, HANDLE IT
-                    return false;
-                }
-                signDetached(doc, fos, signName.toString(), signLoc.toString(), signReason.toString());
-                return true;
-            }
-        });
+        } catch (IOException ex) {
+            return TGS_UnionExcuseVoid.ofExcuse(ex);
+        }
+        return TGS_UnionExcuseVoid.ofVoid();
     }
 
-    private void signDetached(PDDocument document, OutputStream output, CharSequence signName, CharSequence signLoc, CharSequence signReason) {
-        TGS_UnSafe.run(() -> {
+    private TGS_UnionExcuseVoid signDetached(PDDocument document, OutputStream output, CharSequence signName, CharSequence signLoc, CharSequence signReason) {
+        try {
             var accessPermissions = SigUtils.getMDPPermission(document);
             if (accessPermissions == 1) {
-                TGS_UnSafe.thrw(d.className, "signDetached", "No changes to the document are permitted due to DocMDP transform parameters dictionary");
+                return TGS_UnionExcuseVoid.ofExcuse(d.className, "signDetached", "No changes to the document are permitted due to DocMDP transform parameters dictionary");
             }
             var signature = new PDSignature();
             signature.setFilter(PDSignature.FILTER_ADOBE_PPKLITE);
@@ -174,6 +192,9 @@ public class TS_FilePdfSignUtils extends CreateSignatureBase {
                 document.addSignature(signature, this, signatureOptions);
                 document.saveIncremental(output);
             }
-        });
+            return TGS_UnionExcuseVoid.ofVoid();
+        } catch (IOException ex) {
+            return TGS_UnionExcuseVoid.ofExcuse(ex);
+        }
     }
 }
