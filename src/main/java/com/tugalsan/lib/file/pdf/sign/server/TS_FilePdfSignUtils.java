@@ -72,9 +72,9 @@ public class TS_FilePdfSignUtils {
                     "-kst", cfgSssl.keyType(),
                     "-ksf", "\"" + cfgSssl.keyStorePath() + "\"",
                     "-ksp", cfgSssl.keyStorePass(),
-                    "--contact", cfgDesc.contact(),
-                    "--reason", cfgDesc.reason(),
-                    "--location", cfgDesc.place(),
+                    "--contact", cfgDesc.contact().replace(" ", "_"),
+                    "--reason", cfgDesc.reason().replace(" ", "_"),
+                    "--location", cfgDesc.place().replace(" ", "_"),
                     "--out-directory", "\"" + pdfInput.getParent().toAbsolutePath().toString() + "\""
             );
             if (cfgSssl.tsa() != null) {
