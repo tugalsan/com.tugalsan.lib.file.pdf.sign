@@ -80,7 +80,7 @@ public class TS_FilePdfSignUtils {
                 options.add("--tsa-server-url");
                 options.add(cfgSssl.tsa().toString());
             }
-            var cmd = TS_OsProcess.constructJarExecuterString_preview(driver.toAbsolutePath().toString(), options);
+            var cmd = TS_OsProcess.constructJarExecuterString_console_preview(driver.toAbsolutePath().toString(), options);
             d.cr("sign", "cmd", cmd);
             var p = TS_OsProcess.of(cmd);
             //CHECK OUT-FILE
