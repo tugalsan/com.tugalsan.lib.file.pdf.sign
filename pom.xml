@@ -11,32 +11,6 @@
             <artifactId>pdfbox</artifactId>
             <version>3.0.2</version><!-- 3.0.0 -->
         </dependency>
-        <!-- https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core -->
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-core</artifactId>
-            <version>2.23.1</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.pdfbox</groupId>
-            <artifactId>pdfbox-examples</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.apache.lucene</groupId>
-                    <artifactId>lucene-core</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.lucene</groupId>
-                    <artifactId>lucene-analyzers-common</artifactId>
-                </exclusion> 
-            </exclusions>
-            <version>3.0.2</version><!-- 3.0.0 -->
-        </dependency>
-        <dependency><!-- WARNING: Without it: it will compile, but on runtime -> applicationjava.lang.NoClassDefFoundError: org/bouncycastle/cms/CMSException -->
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcpkix-jdk15on</artifactId>
-            <version>1.70</version>
-        </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>com.tugalsan.api.file</artifactId>
@@ -45,11 +19,6 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>com.tugalsan.api.url</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>com.tugalsan.api.charset</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>
