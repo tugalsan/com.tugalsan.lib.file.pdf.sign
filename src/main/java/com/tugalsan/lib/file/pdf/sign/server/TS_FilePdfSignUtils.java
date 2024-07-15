@@ -74,7 +74,8 @@ public class TS_FilePdfSignUtils {
                     "-ksp", cfgSssl.keyStorePass(),
                     "--contact", cfgDesc.contact(),
                     "--reason", cfgDesc.reason(),
-                    "--location", cfgDesc.place()
+                    "--location", cfgDesc.place(),
+                    "--out-directory", pdfInput.getParent().toAbsolutePath().toString()
             );
             if (cfgSssl.tsa() != null) {
                 options.add("--tsa-server-url");
@@ -84,7 +85,7 @@ public class TS_FilePdfSignUtils {
             d.cr("sign", "cmd", cmd);
             var p = TS_OsProcess.of(cmd);
             //CHECK OUT-FILE
-            if (TS_FileUtils.isExistFile(outputPdf)) {
+            if (!TS_FileUtils.isExistFile(outputPdf)) {
                 d.ce("sign", "cmd", p.toString());
                 return TGS_UnionExcuse.ofExcuse(d.className, "sign", "output file not created-" + outputPdf);
             }
