@@ -75,7 +75,7 @@ public class TS_FilePdfSignUtils {
                     "--contact", cfgDesc.contact(),
                     "--reason", cfgDesc.reason(),
                     "--location", cfgDesc.place(),
-                    "--out-directory", pdfInput.getParent().toAbsolutePath().toString()
+                    "--out-directory", "\"" + pdfInput.getParent().toAbsolutePath().toString() + "\""
             );
             if (cfgSssl.tsa() != null) {
                 options.add("--tsa-server-url");
