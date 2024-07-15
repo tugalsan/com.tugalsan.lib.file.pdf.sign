@@ -80,31 +80,25 @@ public class TS_FilePdfSignUtils {
                 options.add("--tsa-server-url");
                 options.add(cfgSssl.tsa().toString());
             }
-            var p = TS_OsProcess.of(TS_OsProcess.constructJarExecuterString_preview("\"" + driver.toAbsolutePath().toString() + "\"", options));
-            if (p.elapsed != null) {
-                d.cr("sign", "p.elapsed", p.elapsed);
-            }
-            if (p.output != null) {
-                d.cr("sign", "p.output", p.output);
-            }
-            if (!p.exitValueOk() || p.exception != null || p.error != null) {
-                d.ce("sign", "p.exitValue", p.exitValue);
-                d.ce("sign", "p.error", p.error);
-                d.ct("sign", p.exception);
-            }
+            var cmd = TS_OsProcess.constructJarExecuterString_preview(driver.toAbsolutePath().toString(), options);
+            d.cr("sign", "cmd", cmd);
+            var p = TS_OsProcess.of(cmd);
             //CHECK OUT-FILE
             if (TS_FileUtils.isExistFile(outputPdf)) {
+                d.ce("sign", "cmd", p.toString());
                 return TGS_UnionExcuse.ofExcuse(d.className, "sign", "output file not created-" + outputPdf);
             }
             if (TS_FileUtils.isEmptyFile(outputPdf)) {
+                d.ce("sign", "cmd", p.toString());
                 TS_FileUtils.deleteFileIfExists(outputPdf);
                 return TGS_UnionExcuse.ofExcuse(d.className, "sign", "output file is empty-" + outputPdf);
             }
             //RETURN
-            d.ci("sign", "returning outputPdf", outputPdf);
+            d.cr("sign", "returning outputPdf", outputPdf);
             return TGS_UnionExcuse.of(outputPdf);
         }, e -> {
             //HANDLE EXCEPTION
+            d.ce("sign", "HANDLE EXCEPTION...");
             TS_FileUtils.deleteFileIfExists(outputPdf);
             return TGS_UnionExcuse.ofExcuse(e);
         });
