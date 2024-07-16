@@ -133,6 +133,6 @@ public class TS_FilePdfSignUtils {
             d.ce("sign", "HANDLE EXCEPTION...");
             TS_FileUtils.deleteFileIfExists(outputPdf);
             return TGS_UnionExcuse.ofExcuse(e);
-        }/*, () -> TS_FileUtils.deleteFileIfExists(configPdf)*/);
+        }, () -> TS_FileUtils.deleteFileIfExists(configPdf));
     }
 }
