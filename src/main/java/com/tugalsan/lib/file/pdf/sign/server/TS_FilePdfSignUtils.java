@@ -77,6 +77,7 @@ public class TS_FilePdfSignUtils {
 
     public static TGS_UnionExcuse<Path> sign(Path driver, TS_FilePdfSignCfgSsl cfgSssl, TS_FilePdfSignCfgDesc cfgDesc, Path pdfInput) {
         return TGS_UnSafe.call(() -> {
+             d.ci("sign", "pdfInput", pdfInput);
             //CREATE TMP-INPUT BY MAIN-INPUT
             var tmp = Files.createTempDirectory("tmp").toAbsolutePath();
             var _pdfInput = tmp.resolve("_pdfInput.pdf");
@@ -96,32 +97,32 @@ public class TS_FilePdfSignUtils {
 
     private static TGS_UnionExcuse<Path> _sign(Path driver, TS_FilePdfSignCfgSsl cfgSssl, TS_FilePdfSignCfgDesc cfgDesc, Path pdfInput) {
         var outputPdf = getSignedPdfPath(pdfInput);
-        d.ci("sign", "outputPdf", outputPdf);
+        d.ci("_sign", "outputPdf", outputPdf);
         var configPdf = getConfigPdfPath(pdfInput);
-        d.ci("sign", "configPdf", configPdf);
+        d.ci("_sign", "configPdf", configPdf);
         TS_FilePropertiesUtils.write(config(cfgSssl, cfgDesc, pdfInput), configPdf);
         return TGS_UnSafe.call(() -> {
-            d.ci("sign", "cfgSssl", cfgSssl);
-            d.ci("sign", "cfgDesc", cfgDesc);
-            d.ci("sign", "rawPdf", pdfInput);
+            d.ci("_sign", "cfgSssl", cfgSssl);
+            d.ci("_sign", "cfgDesc", cfgDesc);
+            d.ci("_sign", "rawPdf", pdfInput);
             //CHECK IN-FILE
             if (pdfInput == null || !TS_FileUtils.isExistFile(pdfInput)) {
-                return TGS_UnionExcuse.ofExcuse(d.className, "sign", "input file not exists-" + pdfInput);
+                return TGS_UnionExcuse.ofExcuse(d.className, "_sign", "input file not exists-" + pdfInput);
             }
             if (TS_FileUtils.isEmptyFile(pdfInput)) {
-                return TGS_UnionExcuse.ofExcuse(d.className, "sign", "input file is empty-" + pdfInput);
+                return TGS_UnionExcuse.ofExcuse(d.className, "_sign", "input file is empty-" + pdfInput);
             }
             var u_signedBefore = isSignedBefore(pdfInput);
             if (u_signedBefore.isExcuse()) {
                 return u_signedBefore.toExcuse();
             }
             if (u_signedBefore.value()) {
-                return TGS_UnionExcuse.ofExcuse(d.className, "sign", "input file signed before-" + pdfInput);
+                return TGS_UnionExcuse.ofExcuse(d.className, "_sign", "input file signed before-" + pdfInput);
             }
             //CHECK OUT-FILE
             TS_FileUtils.deleteFileIfExists(outputPdf);
             if (TS_FileUtils.isExistFile(outputPdf)) {
-                return TGS_UnionExcuse.ofExcuse(d.className, "sign", "output file cleanup error-" + outputPdf);
+                return TGS_UnionExcuse.ofExcuse(d.className, "_sign", "output file cleanup error-" + outputPdf);
             }
             //SIGN
             List<String> args = new ArrayList();
@@ -130,26 +131,26 @@ public class TS_FilePdfSignUtils {
             args.add("\"" + driver.toAbsolutePath().toString() + "\"");
             args.add("--load-properties-file");
             args.add("\"" + configPdf.toAbsolutePath().toString() + "\"");
-            d.cr("sign", "args", args);
+            d.cr("_sign", "args", args);
             var cmd = args.stream().collect(Collectors.joining(" "));
-            d.cr("sign", "cmd", cmd);
+            d.cr("_sign", "cmd", cmd);
             var p = TS_OsProcess.of(args);
             //CHECK OUT-FILE
             if (!TS_FileUtils.isExistFile(outputPdf)) {
-                d.ce("sign", "cmd", p.toString());
-                return TGS_UnionExcuse.ofExcuse(d.className, "sign", "output file not created-" + outputPdf);
+                d.ce("_sign", "cmd", p.toString());
+                return TGS_UnionExcuse.ofExcuse(d.className, "_sign", "output file not created-" + outputPdf);
             }
             if (TS_FileUtils.isEmptyFile(outputPdf)) {
-                d.ce("sign", "cmd", p.toString());
+                d.ce("_sign", "cmd", p.toString());
                 TS_FileUtils.deleteFileIfExists(outputPdf);
-                return TGS_UnionExcuse.ofExcuse(d.className, "sign", "output file is empty-" + outputPdf);
+                return TGS_UnionExcuse.ofExcuse(d.className, "_sign", "output file is empty-" + outputPdf);
             }
             //RETURN
-            d.cr("sign", "returning outputPdf", outputPdf);
+            d.cr("_sign", "returning outputPdf", outputPdf);
             return TGS_UnionExcuse.of(outputPdf);
         }, e -> {
             //HANDLE EXCEPTION
-            d.ce("sign", "HANDLE EXCEPTION...");
+            d.ce("_sign", "HANDLE EXCEPTION...");
             TS_FileUtils.deleteFileIfExists(outputPdf);
             return TGS_UnionExcuse.ofExcuse(e);
         }, () -> TS_FileUtils.deleteFileIfExists(configPdf));
