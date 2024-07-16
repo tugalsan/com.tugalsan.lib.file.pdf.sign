@@ -5,12 +5,16 @@ import java.nio.file.Path;
 import org.apache.pdfbox.*;
 import com.tugalsan.api.file.server.*;
 import com.tugalsan.api.log.server.*;
+import com.tugalsan.api.os.server.TS_OsJavaUtils;
 import com.tugalsan.api.os.server.TS_OsProcess;
+import com.tugalsan.api.stream.client.TGS_StreamUtils;
 import com.tugalsan.api.union.client.TGS_UnionExcuse;
 import com.tugalsan.api.unsafe.client.*;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 public class TS_FilePdfSignUtils {
 
@@ -48,7 +52,8 @@ public class TS_FilePdfSignUtils {
 
     public static Properties config(TS_FilePdfSignCfgSsl cfgSssl, TS_FilePdfSignCfgDesc cfgDesc, Path pdfInput) {
         var props = new Properties();
-        props.setProperty("certification", "NOT_CERTIFIED");
+        props.setProperty("certification.level", "NOT_CERTIFIED");
+        props.setProperty("enc.home", System.getProperty("user.home"));
         props.setProperty("enc.keyPwd", cfgSssl.keyStorePass());
         props.setProperty("enc.keystorePwd", cfgSssl.keyStorePass());
         props.setProperty("inpdf.file", pdfInput.toAbsolutePath().toString());
@@ -57,12 +62,14 @@ public class TS_FilePdfSignUtils {
         props.setProperty("keystore.type", cfgSssl.keyType());
         props.setProperty("keystore.alias", "myallias");
         props.setProperty("keystore.keyIndex", "0");
-        props.setProperty("hash.algorithm", "SHA1");
+        props.setProperty("hash.algorithm", "SHA512");
         props.setProperty("ocsp.enabled", "false");
         props.setProperty("pdf.encryption", "NONE");
         props.setProperty("signature.contact", cfgDesc.contact());
         props.setProperty("signature.reason", cfgDesc.reason());
         props.setProperty("signature.location", cfgDesc.place());
+        props.setProperty("store.passwords", "true");
+        props.setProperty("tsa.enabled", "true");
         props.setProperty("tsa.serverAuthn", "NONE");
         props.setProperty("tsa.url", cfgSssl.tsa().toString());
         return props;
@@ -113,11 +120,19 @@ public class TS_FilePdfSignUtils {
 //                options.add(cfgSssl.tsa().toString());
 //            }
 //            var cmd = TS_OsProcess.constructJarExecuterString_console_preview(driver.toAbsolutePath().toString(), options);
-            var cmd = TS_OsProcess.constructJarExecuterString_console_preview(driver.toAbsolutePath().toString(), List.of(
-                    "--load-properties-file", "\"" + configPdf.toAbsolutePath().toString() + "\""
-            ));
+            List<String> args = new ArrayList();
+            args.add("\"" + TS_OsJavaUtils.getPathJava().resolveSibling("java.exe") + "\"");
+//            args.add("--enable-preview");
+//        args_out.add("-Djdk.jar.maxSignatureFileSize=800000000");
+//            args.add("-Xmx512m");
+            args.add("-jar");
+            args.add("\"" + driver.toAbsolutePath().toString() + "\" ");
+            args.add("--load-properties-file");
+            args.add("\"" + configPdf.toAbsolutePath().toString() + "\"");
+            d.cr("sign", "args", args);
+            var cmd = args.stream().collect(Collectors.joining(" "));
             d.cr("sign", "cmd", cmd);
-            var p = TS_OsProcess.of(cmd);
+            var p = TS_OsProcess.of(args);
             //CHECK OUT-FILE
             if (!TS_FileUtils.isExistFile(outputPdf)) {
                 d.ce("sign", "cmd", p.toString());
@@ -136,6 +151,6 @@ public class TS_FilePdfSignUtils {
             d.ce("sign", "HANDLE EXCEPTION...");
             TS_FileUtils.deleteFileIfExists(outputPdf);
             return TGS_UnionExcuse.ofExcuse(e);
-        });
+        }/*, () -> TS_FileUtils.deleteFileIfExists(configPdf)*/);
     }
 }
