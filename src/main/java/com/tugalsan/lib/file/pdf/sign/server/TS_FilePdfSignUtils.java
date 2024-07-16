@@ -10,6 +10,7 @@ import com.tugalsan.api.os.server.TS_OsProcess;
 import com.tugalsan.api.union.client.TGS_UnionExcuse;
 import com.tugalsan.api.unsafe.client.*;
 import java.io.File;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -75,6 +76,25 @@ public class TS_FilePdfSignUtils {
     }
 
     public static TGS_UnionExcuse<Path> sign(Path driver, TS_FilePdfSignCfgSsl cfgSssl, TS_FilePdfSignCfgDesc cfgDesc, Path pdfInput) {
+        return TGS_UnSafe.call(() -> {
+            //CREATE TMP-INPUT BY MAIN-INPUT
+            var tmp = Files.createTempDirectory("tmp").toAbsolutePath();
+            var _pdfInput = tmp.resolve("_pdfInput.pdf");
+            TS_FileUtils.copyAs(pdfInput, _pdfInput, true);
+
+            //IF SINGED, COPY TMP-OUTPUT TO MAIN-OUTPUT
+            var u = _sign(driver, cfgSssl, cfgDesc, _pdfInput);
+            if (u.isExcuse()) {
+                return u.toExcuse();
+            }
+            var pdfOutput = getSignedPdfPath(pdfInput);
+            TS_FileUtils.copyAs(u.value(), pdfOutput, true);
+
+            return TGS_UnionExcuse.of(pdfOutput);
+        }, e -> TGS_UnionExcuse.ofExcuse(e));
+    }
+
+    private static TGS_UnionExcuse<Path> _sign(Path driver, TS_FilePdfSignCfgSsl cfgSssl, TS_FilePdfSignCfgDesc cfgDesc, Path pdfInput) {
         var outputPdf = getSignedPdfPath(pdfInput);
         d.ci("sign", "outputPdf", outputPdf);
         var configPdf = getConfigPdfPath(pdfInput);
