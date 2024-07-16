@@ -108,7 +108,7 @@ public class TS_FilePdfSignUtils {
             List<String> args = new ArrayList();
             args.add("\"" + TS_OsJavaUtils.getPathJava().resolveSibling("java.exe") + "\"");
             args.add("-jar");
-            args.add("\"" + driver.toAbsolutePath().toString() + "\" ");
+            args.add("\"" + driver.toAbsolutePath().toString() + "\"");
             args.add("--load-properties-file");
             args.add("\"" + configPdf.toAbsolutePath().toString() + "\"");
             d.cr("sign", "args", args);
