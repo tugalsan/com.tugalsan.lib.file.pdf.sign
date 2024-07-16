@@ -42,6 +42,7 @@ public class TS_FilePdfSignUtils {
         return rawPdf.resolveSibling("config.properties");
     }
 
+    @Deprecated //NOT WORKING!
     public static TGS_UnionExcuse<Boolean> isSignedBefore(Path pdf) {
         return TGS_UnSafe.call(() -> {
             try (var doc = Loader.loadPDF(pdf.toFile())) {
