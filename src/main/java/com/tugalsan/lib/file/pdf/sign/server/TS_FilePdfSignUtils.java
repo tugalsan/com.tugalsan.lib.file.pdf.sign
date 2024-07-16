@@ -105,26 +105,8 @@ public class TS_FilePdfSignUtils {
                 return TGS_UnionExcuse.ofExcuse(d.className, "sign", "output file cleanup error-" + outputPdf);
             }
             //SIGN
-//            var options = TGS_ListUtils.of(
-//                    "\"" + pdfInput.toAbsolutePath().toString() + "\"",
-//                    "-kst", cfgSssl.keyType(),
-//                    "-ksf", "\"" + cfgSssl.keyStorePath() + "\"",
-//                    "-ksp", cfgSssl.keyStorePass(),
-//                    "--contact", cfgDesc.contact().replace(" ", "_"),
-//                    "--reason", cfgDesc.reason().replace(" ", "_"),
-//                    "--location", cfgDesc.place().replace(" ", "_"),
-//                    "--out-directory", "\"" + pdfInput.getParent().toAbsolutePath().toString() + "\""
-//            );
-//            if (cfgSssl.tsa() != null) {
-//                options.add("--tsa-server-url");
-//                options.add(cfgSssl.tsa().toString());
-//            }
-//            var cmd = TS_OsProcess.constructJarExecuterString_console_preview(driver.toAbsolutePath().toString(), options);
             List<String> args = new ArrayList();
             args.add("\"" + TS_OsJavaUtils.getPathJava().resolveSibling("java.exe") + "\"");
-//            args.add("--enable-preview");
-//        args_out.add("-Djdk.jar.maxSignatureFileSize=800000000");
-//            args.add("-Xmx512m");
             args.add("-jar");
             args.add("\"" + driver.toAbsolutePath().toString() + "\" ");
             args.add("--load-properties-file");
