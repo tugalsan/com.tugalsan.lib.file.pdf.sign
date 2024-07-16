@@ -113,13 +113,13 @@ public class TS_FilePdfSignUtils {
             if (TS_FileUtils.isEmptyFile(pdfInput)) {
                 return TGS_UnionExcuse.ofExcuse(d.className, "_sign", "input file is empty-" + pdfInput);
             }
-            var u_signedBefore = isSignedBefore(pdfInput);
-            if (u_signedBefore.isExcuse()) {
-                return u_signedBefore.toExcuse();
-            }
-            if (u_signedBefore.value()) {
-                return TGS_UnionExcuse.ofExcuse(d.className, "_sign", "input file signed before-" + pdfInput);
-            }
+//            var u_signedBefore = isSignedBefore(pdfInput);
+//            if (u_signedBefore.isExcuse()) {
+//                return u_signedBefore.toExcuse();
+//            }
+//            if (u_signedBefore.value()) {
+//                return TGS_UnionExcuse.ofExcuse(d.className, "_sign", "input file signed before-" + pdfInput);
+//            }
             //CHECK OUT-FILE
             TS_FileUtils.deleteFileIfExists(outputPdf);
             if (TS_FileUtils.isExistFile(outputPdf)) {
