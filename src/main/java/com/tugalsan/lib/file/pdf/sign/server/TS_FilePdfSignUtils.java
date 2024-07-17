@@ -2,7 +2,6 @@ package com.tugalsan.lib.file.pdf.sign.server;
 
 import com.tugalsan.api.file.properties.server.TS_FilePropertiesUtils;
 import java.nio.file.Path;
-import org.apache.pdfbox.*;
 import com.tugalsan.api.file.server.*;
 import com.tugalsan.api.log.server.*;
 import com.tugalsan.api.os.server.TS_OsJavaUtils;
@@ -20,7 +19,7 @@ public class TS_FilePdfSignUtils {
 
     final private static TS_Log d = TS_Log.of(true, TS_FilePdfSignUtils.class);
 
-    public static Path getPossibleDriverPath() {
+    public static Path pathDriver() {
         return List.of(File.listRoots()).stream()
                 .map(p -> Path.of(p.toString()))
                 .map(p -> p.resolve("bin"))
@@ -32,26 +31,16 @@ public class TS_FilePdfSignUtils {
                 .findAny().orElse(null);
     }
 
-    public static Path getSignedPdfPath(Path rawPdf) {
+    public static Path pathOutput(Path rawPdf) {
         var label = TS_FileUtils.getNameLabel(rawPdf);
-        return rawPdf.resolveSibling(label + "_signed.pdf");
+        return rawPdf.resolveSibling(label + "_executeed.pdf");
     }
 
-    public static Path getConfigPdfPath(Path rawPdf) {
-//        var label = TS_FileUtils.getNameLabel(rawPdf);
+    public static Path pathConfig(Path rawPdf) {
         return rawPdf.resolveSibling("config.properties");
     }
 
-    @Deprecated //NOT WORKING!
-    public static TGS_UnionExcuse<Boolean> isSignedBefore(Path pdf) {
-        return TGS_UnSafe.call(() -> {
-            try (var doc = Loader.loadPDF(pdf.toFile())) {
-                return TGS_UnionExcuse.of(!doc.getSignatureDictionaries().isEmpty());
-            }
-        }, e -> TGS_UnionExcuse.ofExcuse(e));
-    }
-
-    public static Properties config(TS_FilePdfSignCfgSsl cfgSssl, TS_FilePdfSignCfgDesc cfgDesc, Path pdfInput) {
+    public static Properties makeConfig(TS_FilePdfSignCfgSsl cfgSssl, TS_FilePdfSignCfgDesc cfgDesc, Path pathInput) {
         var props = new Properties();
         props.setProperty("certification.level", "NOT_CERTIFIED");
         props.setProperty("crl.enabled", "false");
@@ -59,13 +48,13 @@ public class TS_FilePdfSignUtils {
         props.setProperty("enc.keyPwd", cfgSssl.keyStorePass());
         props.setProperty("enc.keystorePwd", cfgSssl.keyStorePass());
         props.setProperty("hash.algorithm", "SHA512");
-        props.setProperty("inpdf.file", pdfInput.toAbsolutePath().toString());
+        props.setProperty("inpdf.file", pathInput.toAbsolutePath().toString());
         props.setProperty("keystore.alias", "myallias");
         props.setProperty("keystore.file", cfgSssl.keyStorePath().toAbsolutePath().toString());
         props.setProperty("keystore.keyIndex", "0");
         props.setProperty("keystore.type", cfgSssl.keyType());
         props.setProperty("ocsp.enabled", "false");
-        props.setProperty("outpdf.file", getSignedPdfPath(pdfInput).toAbsolutePath().toString());
+        props.setProperty("outpdf.file", pathOutput(pathInput).toAbsolutePath().toString());
         props.setProperty("pdf.encryption", "NONE");
         props.setProperty("signature.append", "false");
         props.setProperty("signature.contact", cfgDesc.contact());
@@ -78,54 +67,47 @@ public class TS_FilePdfSignUtils {
         return props;
     }
 
-    public static TGS_UnionExcuse<Path> sign(Path driver, TS_FilePdfSignCfgSsl cfgSssl, TS_FilePdfSignCfgDesc cfgDesc, Path pdfInput) {
+    public static TGS_UnionExcuse<Path> execute(Path driver, TS_FilePdfSignCfgSsl cfgSssl, TS_FilePdfSignCfgDesc cfgDesc, Path pathInput) {
         return TGS_UnSafe.call(() -> {
-             d.ci("sign", "pdfInput", pdfInput);
+            d.ci("execute", "pathInput", pathInput);
             //CREATE TMP-INPUT BY MAIN-INPUT
             var tmp = Files.createTempDirectory("tmp").toAbsolutePath();
-            var _pdfInput = tmp.resolve("_pdfInput.pdf");
-            TS_FileUtils.copyAs(pdfInput, _pdfInput, true);
+            var _pathInput = tmp.resolve("_pathInput.pdf");
+            TS_FileUtils.copyAs(pathInput, _pathInput, true);
 
             //IF SINGED, COPY TMP-OUTPUT TO MAIN-OUTPUT
-            var u = _sign(driver, cfgSssl, cfgDesc, _pdfInput);
+            var u = _execute(driver, cfgSssl, cfgDesc, _pathInput);
             if (u.isExcuse()) {
                 return u.toExcuse();
             }
-            var pdfOutput = getSignedPdfPath(pdfInput);
+            var pdfOutput = pathOutput(pathInput);
             TS_FileUtils.copyAs(u.value(), pdfOutput, true);
 
             return TGS_UnionExcuse.of(pdfOutput);
         }, e -> TGS_UnionExcuse.ofExcuse(e));
     }
 
-    private static TGS_UnionExcuse<Path> _sign(Path driver, TS_FilePdfSignCfgSsl cfgSssl, TS_FilePdfSignCfgDesc cfgDesc, Path pdfInput) {
-        var outputPdf = getSignedPdfPath(pdfInput);
-        d.ci("_sign", "outputPdf", outputPdf);
-        var configPdf = getConfigPdfPath(pdfInput);
-        d.ci("_sign", "configPdf", configPdf);
-        TS_FilePropertiesUtils.write(config(cfgSssl, cfgDesc, pdfInput), configPdf);
+    private static TGS_UnionExcuse<Path> _execute(Path driver, TS_FilePdfSignCfgSsl cfgSssl, TS_FilePdfSignCfgDesc cfgDesc, Path pathInput) {
+        var pathOutput = pathOutput(pathInput);
+        d.ci("_execute", "pathOutput", pathOutput);
+        var pathConfig = pathConfig(pathInput);
+        d.ci("_execute", "pathConfig", pathConfig);
+        TS_FilePropertiesUtils.write(makeConfig(cfgSssl, cfgDesc, pathInput), pathConfig);
         return TGS_UnSafe.call(() -> {
-            d.ci("_sign", "cfgSssl", cfgSssl);
-            d.ci("_sign", "cfgDesc", cfgDesc);
-            d.ci("_sign", "rawPdf", pdfInput);
+            d.ci("_execute", "cfgSssl", cfgSssl);
+            d.ci("_execute", "cfgDesc", cfgDesc);
+            d.ci("_execute", "rawPdf", pathInput);
             //CHECK IN-FILE
-            if (pdfInput == null || !TS_FileUtils.isExistFile(pdfInput)) {
-                return TGS_UnionExcuse.ofExcuse(d.className, "_sign", "input file not exists-" + pdfInput);
+            if (pathInput == null || !TS_FileUtils.isExistFile(pathInput)) {
+                return TGS_UnionExcuse.ofExcuse(d.className, "_execute", "pathInput not exists-" + pathInput);
             }
-            if (TS_FileUtils.isEmptyFile(pdfInput)) {
-                return TGS_UnionExcuse.ofExcuse(d.className, "_sign", "input file is empty-" + pdfInput);
+            if (TS_FileUtils.isEmptyFile(pathInput)) {
+                return TGS_UnionExcuse.ofExcuse(d.className, "_execute", "pathInput is empty-" + pathInput);
             }
-//            var u_signedBefore = isSignedBefore(pdfInput);
-//            if (u_signedBefore.isExcuse()) {
-//                return u_signedBefore.toExcuse();
-//            }
-//            if (u_signedBefore.value()) {
-//                return TGS_UnionExcuse.ofExcuse(d.className, "_sign", "input file signed before-" + pdfInput);
-//            }
             //CHECK OUT-FILE
-            TS_FileUtils.deleteFileIfExists(outputPdf);
-            if (TS_FileUtils.isExistFile(outputPdf)) {
-                return TGS_UnionExcuse.ofExcuse(d.className, "_sign", "output file cleanup error-" + outputPdf);
+            TS_FileUtils.deleteFileIfExists(pathOutput);
+            if (TS_FileUtils.isExistFile(pathOutput)) {
+                return TGS_UnionExcuse.ofExcuse(d.className, "_execute", "pathOutput cleanup error-" + pathOutput);
             }
             //SIGN
             List<String> args = new ArrayList();
@@ -133,29 +115,29 @@ public class TS_FilePdfSignUtils {
             args.add("-jar");
             args.add("\"" + driver.toAbsolutePath().toString() + "\"");
             args.add("--load-properties-file");
-            args.add("\"" + configPdf.toAbsolutePath().toString() + "\"");
-            d.cr("_sign", "args", args);
+            args.add("\"" + pathConfig.toAbsolutePath().toString() + "\"");
+            d.cr("_execute", "args", args);
             var cmd = args.stream().collect(Collectors.joining(" "));
-            d.cr("_sign", "cmd", cmd);
+            d.cr("_execute", "cmd", cmd);
             var p = TS_OsProcess.of(args);
             //CHECK OUT-FILE
-            if (!TS_FileUtils.isExistFile(outputPdf)) {
-                d.ce("_sign", "cmd", p.toString());
-                return TGS_UnionExcuse.ofExcuse(d.className, "_sign", "output file not created-" + outputPdf);
+            if (!TS_FileUtils.isExistFile(pathOutput)) {
+                d.ce("_execute", "cmd", p.toString());
+                return TGS_UnionExcuse.ofExcuse(d.className, "_execute", "pathOutput not created-" + pathOutput);
             }
-            if (TS_FileUtils.isEmptyFile(outputPdf)) {
-                d.ce("_sign", "cmd", p.toString());
-                TS_FileUtils.deleteFileIfExists(outputPdf);
-                return TGS_UnionExcuse.ofExcuse(d.className, "_sign", "output file is empty-" + outputPdf);
+            if (TS_FileUtils.isEmptyFile(pathOutput)) {
+                d.ce("_execute", "cmd", p.toString());
+                TS_FileUtils.deleteFileIfExists(pathOutput);
+                return TGS_UnionExcuse.ofExcuse(d.className, "_execute", "pathOutput is empty-" + pathOutput);
             }
             //RETURN
-            d.cr("_sign", "returning outputPdf", outputPdf);
-            return TGS_UnionExcuse.of(outputPdf);
+            d.cr("_execute", "returning pathOutput", pathOutput);
+            return TGS_UnionExcuse.of(pathOutput);
         }, e -> {
             //HANDLE EXCEPTION
-            d.ce("_sign", "HANDLE EXCEPTION...");
-            TS_FileUtils.deleteFileIfExists(outputPdf);
+            d.ce("_execute", "HANDLE EXCEPTION...");
+            TS_FileUtils.deleteFileIfExists(pathOutput);
             return TGS_UnionExcuse.ofExcuse(e);
-        }, () -> TS_FileUtils.deleteFileIfExists(configPdf));
+        }, () -> TS_FileUtils.deleteFileIfExists(pathConfig));
     }
 }
