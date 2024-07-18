@@ -20,13 +20,14 @@ public class TS_FilePdfSignUtils {
     final private static TS_Log d = TS_Log.of(true, TS_FilePdfSignUtils.class);
 
     public static Path pathDriver() {
+        var driverPackageName = TS_FilePdfSignUtils.class.getPackageName().replace(".lib.", ".dsk.");
         return List.of(File.listRoots()).stream()
                 .map(p -> Path.of(p.toString()))
                 .map(p -> p.resolve("bin"))
-                .map(p -> p.resolve("com.tugalsan.dsk.pdf.sign"))
+                .map(p -> p.resolve(driverPackageName))
                 .map(p -> p.resolve("home"))
                 .map(p -> p.resolve("target"))
-                .map(p -> p.resolve("com.tugalsan.dsk.pdf.sign-1.0-SNAPSHOT-jar-with-dependencies.jar"))
+                .map(p -> p.resolve(driverPackageName + "-1.0-SNAPSHOT-jar-with-dependencies.jar"))
                 .filter(p -> TS_FileUtils.isExistFile(p))
                 .findAny().orElse(null);
     }
