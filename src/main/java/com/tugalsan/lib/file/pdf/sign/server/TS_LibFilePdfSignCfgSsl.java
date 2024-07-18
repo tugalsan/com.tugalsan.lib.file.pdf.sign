@@ -4,7 +4,7 @@ import com.tugalsan.api.charset.client.TGS_CharSetCast;
 import com.tugalsan.api.url.client.TGS_Url;
 import java.nio.file.Path;
 
-public record TS_FilePdfSignCfgSsl(Path keyStorePath, String keyStorePass, TGS_Url tsa) {
+public record TS_LibFilePdfSignCfgSsl(Path keyStorePath, String keyStorePass, TGS_Url tsa) {
 
     public static TGS_Url defaultTsa() {
         return TGS_Url.of("https://freetsa.org/tsr");

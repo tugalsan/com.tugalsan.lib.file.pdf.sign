@@ -15,12 +15,12 @@ import java.util.List;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
-public class TS_FilePdfSignUtils {
+public class TS_LibFilePdfSignUtils {
 
-    final private static TS_Log d = TS_Log.of(true, TS_FilePdfSignUtils.class);
+    final private static TS_Log d = TS_Log.of(true, TS_LibFilePdfSignUtils.class);
 
     public static Path pathDriver() {
-        var driverPackageName = TS_FilePdfSignUtils.class.getPackageName().replace(".lib.", ".dsk.");
+        var driverPackageName = TS_LibFilePdfSignUtils.class.getPackageName().replace(".lib.", ".dsk.");
         return List.of(File.listRoots()).stream()
                 .map(p -> Path.of(p.toString()))
                 .map(p -> p.resolve("bin"))
@@ -41,7 +41,7 @@ public class TS_FilePdfSignUtils {
         return rawPdf.resolveSibling("config.properties");
     }
 
-    public static Properties makeConfig(TS_FilePdfSignCfgSsl cfgSssl, TS_FilePdfSignCfgDesc cfgDesc, Path pathInput) {
+    public static Properties makeConfig(TS_LibFilePdfSignCfgSsl cfgSssl, TS_LibFilePdfSignCfgDesc cfgDesc, Path pathInput) {
         var props = new Properties();
         props.setProperty("certification.level", "NOT_CERTIFIED");
         props.setProperty("crl.enabled", "false");
@@ -68,7 +68,7 @@ public class TS_FilePdfSignUtils {
         return props;
     }
 
-    public static TGS_UnionExcuse<Path> execute(Path driver, TS_FilePdfSignCfgSsl cfgSssl, TS_FilePdfSignCfgDesc cfgDesc, Path pathInput) {
+    public static TGS_UnionExcuse<Path> execute(Path driver, TS_LibFilePdfSignCfgSsl cfgSssl, TS_LibFilePdfSignCfgDesc cfgDesc, Path pathInput) {
         return TGS_UnSafe.call(() -> {
             d.ci("execute", "pathInput", pathInput);
             //CREATE TMP-INPUT BY MAIN-INPUT
@@ -88,7 +88,7 @@ public class TS_FilePdfSignUtils {
         }, e -> TGS_UnionExcuse.ofExcuse(e));
     }
 
-    private static TGS_UnionExcuse<Path> _execute(Path driver, TS_FilePdfSignCfgSsl cfgSssl, TS_FilePdfSignCfgDesc cfgDesc, Path pathInput) {
+    private static TGS_UnionExcuse<Path> _execute(Path driver, TS_LibFilePdfSignCfgSsl cfgSssl, TS_LibFilePdfSignCfgDesc cfgDesc, Path pathInput) {
         var pathOutput = pathOutput(pathInput);
         d.ci("_execute", "pathOutput", pathOutput);
         var pathConfig = pathConfig(pathInput);
