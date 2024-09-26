@@ -21,6 +21,7 @@ public class TS_LibFilePdfSignUtils {
 
     public static Path pathDriver() {
         var driverPackageName = TS_LibFilePdfSignUtils.class.getPackageName().replace(".lib.", ".dsk.");
+        d.ci("pathDriver", "driverPackageName", driverPackageName);
         return List.of(File.listRoots()).stream()
                 .map(p -> Path.of(p.toString()))
                 .map(p -> p.resolve("bin"))
