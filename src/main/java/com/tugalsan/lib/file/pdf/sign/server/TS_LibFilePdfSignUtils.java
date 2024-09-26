@@ -12,6 +12,7 @@ import java.io.File;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
@@ -19,18 +20,22 @@ public class TS_LibFilePdfSignUtils {
 
     final private static TS_Log d = TS_Log.of(true, TS_LibFilePdfSignUtils.class);
 
-    public static Path pathDriver() {
-        var driverPackageName = TS_LibFilePdfSignUtils.class.getPackageName().replace(".lib.", ".dsk.");
+    public static Optional<Path> pathDriver() {
+        //var driverPackageName = TS_LibFilePdfSignUtils.class.getPackageName().replace(".lib.", ".dsk.").replace(".server", "");
+        var driverPackageName = "com.tugalsan.dsk.pdf.sign";
         d.ci("pathDriver", "driverPackageName", driverPackageName);
-        return List.of(File.listRoots()).stream()
-                .map(p -> Path.of(p.toString()))
-                .map(p -> p.resolve("bin"))
-                .map(p -> p.resolve(driverPackageName))
-                .map(p -> p.resolve("home"))
-                .map(p -> p.resolve("target"))
-                .map(p -> p.resolve(driverPackageName + "-1.0-SNAPSHOT-jar-with-dependencies.jar"))
-                .filter(p -> TS_FileUtils.isExistFile(p))
-                .findAny().orElse(null);
+        for (var root : File.listRoots()) {
+            var pathDriver = root.toPath().resolve("bin").resolve(driverPackageName)
+                    .resolve("home").resolve("target")
+                    .resolve(driverPackageName + "-1.0-SNAPSHOT-jar-with-dependencies.jar");
+            if (TS_FileUtils.isExistFile(pathDriver)) {
+                d.cr("pathDriver", pathDriver.toAbsolutePath().toString(), "found");
+                return Optional.of(pathDriver);
+            } else {
+                d.ci("pathDriver", pathDriver.toAbsolutePath().toString(), "not-found");
+            }
+        }
+        return Optional.empty();
     }
 
     public static Path pathOutput(Path rawPdf) {
